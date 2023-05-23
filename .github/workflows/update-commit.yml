@@ -1,0 +1,43 @@
+on:
+  workflow_call:
+    inputs:
+      hash_file:
+        required: true
+        type: string
+      plugin_name:
+        required: true
+        type: string
+      repo:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  update-commit:
+    runs-on: ubuntu-latest
+    env:
+      HASH_FILE: ${{ inputs.hash_file }}
+      PLUGIN_NAME: ${{ inputs.plugin_name }}
+      REPO: ${{ inputs.repo }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Update build commit
+      run: git ls-remote ${{ env.REPO }} HEAD > ${{ env.HASH_FILE }}
+
+    - name: Commit
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git pull
+        git add ${{ env.HASH_FILE }}
+        git commit -m "update ${{ env.PLUGIN_NAME }} build commit"
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
