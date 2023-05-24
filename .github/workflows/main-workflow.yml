@@ -39,6 +39,7 @@ jobs:
     needs: check-for-new-caddy-release
     outputs:
       desec: ${{ steps.caddy-check.outputs.desec-out-of-date || steps.desec.outputs.desec-out-of-date }}
+      cloudflare: ${{ steps.caddy-check.outputs.cloudflare-out-of-date || steps.cloudflare.outputs.cloudflare-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -48,11 +49,17 @@ jobs:
         id: caddy-check
         run: |
           echo ::set-output name=desec-out-of-date::true
+          echo ::set-output name=cloudflare-out-of-date::true
 
       - name: Pull desec plugin remote commits
         if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
         id: desec
         run: sh remote-check.sh https://github.com/caddy-dns/desec desec-local.txt git-hashes/desec.txt desec-out-of-date
+
+      - name: Pull cloudflare plugin remote commits
+        if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
+        id: cloudflare
+        run: sh remote-check.sh https://github.com/caddy-dns/cloudflare cloudflare-local.txt git-hashes/cloudflare.txt cloudflare-out-of-date
 
   build-desec-image:
     needs: check-for-plugin-updates
@@ -96,6 +103,47 @@ jobs:
       plugin_name: desec
       repo: https://github.com/caddy-dns/desec
 
+  build-cloudflare-image:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.cloudflare == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
+    secrets: inherit
+    permissions:
+      packages: write
+    with:
+      image_name: fariszr/caddy-dns
+      dockerfile: Dockerfile
+      image_title: Caddy with cloudflare dns plugin
+      license: MIT
+      tag: cloudflare
+      go_plugin_link: github.com/caddy-dns/cloudflare
+
+  build-cloudflare-alpine-image:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.cloudflare == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
+    secrets: inherit
+    permissions:
+      packages: write
+    with:
+      image_name: fariszr/caddy-dns
+      dockerfile: Dockerfile-alpine
+      image_title: Caddy with cloudflare dns plugin
+      license: MIT
+      tag: cloudflare-alpine
+      go_plugin_link: github.com/caddy-dns/cloudflare
+
+  update-cloudflare-build-commit:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.cloudflare == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/update-commit.yml@main
+    secrets: inherit
+    permissions:
+      contents: write
+    with:
+      hash_file: git-hashes/cloudflare.txt
+      plugin_name: cloudflare
+      repo: https://github.com/caddy-dns/cloudflare
 
   update-caddy-build-version:
     runs-on: ubuntu-latest
