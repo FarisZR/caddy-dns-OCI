@@ -32,7 +32,7 @@ jobs:
 
       - name: Check for modified files
         id: git-check
-        run: echo ::set-output name=caddy-out-of-date::$([ -z "`git status --porcelain`" ] && echo "false" || echo "true")
+        run: echo "{caddy-out-of-date}={$([ -z "`git status --porcelain`" ] && echo "false" || echo "true"}"
 
   check-for-plugin-updates:
     runs-on: ubuntu-latest
@@ -48,8 +48,8 @@ jobs:
         if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'true' }}
         id: caddy-check
         run: |
-          echo ::set-output name=desec-out-of-date::true
-          echo ::set-output name=cloudflare-out-of-date::true
+          echo "{desec-out-of-date}={true}" >> $GITHUB_OUTPUT
+          echo "{cloudflare-out-of-date}={true}" >> $GITHUB_OUTPUT
 
       - name: Pull desec plugin remote commits
         if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
