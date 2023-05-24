@@ -62,11 +62,11 @@ jobs:
     permissions:
       packages: write
     with:
-      image_name: fariszr/caddy-desec
+      image_name: fariszr/caddy-dns
       dockerfile: Dockerfile
       image_title: Caddy with desec dns plugin
       license: MIT
-      tag: latest
+      tag: desec
       go_plugin_link: github.com/caddy-dns/desec
 
   build-desec-alpine-image:
@@ -77,11 +77,11 @@ jobs:
     permissions:
       packages: write
     with:
-      image_name: fariszr/caddy-desec
+      image_name: fariszr/caddy-dns
       dockerfile: Dockerfile-alpine
       image_title: Caddy with desec dns plugin
       license: MIT
-      tag: alpine
+      tag: desec-alpine
       go_plugin_link: github.com/caddy-dns/desec
 
   update-desec-build-commit:
