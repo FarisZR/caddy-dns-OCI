@@ -1,0 +1,126 @@
+name: check for caddy and plugin updates
+
+on:
+  # Possibility to run it manually
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/main-workflow.yml"
+      - ".github/workflows/build-image.yml"
+      - ".github/workflows/update-commit.yml"
+      - "Dockerfile-desec"
+      - "Dockerfile-desec-alpine"
+      - "commit-check.sh"
+  # Automated
+  schedule:
+    # Run Every hour
+    - cron: "0 * * * *"
+
+jobs:
+  check-for-new-caddy-release:
+    runs-on: ubuntu-latest
+    outputs:
+      caddy: ${{ steps.git-check.outputs.caddy-out-of-date }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch release version
+        run: |
+          curl -sL https://api.github.com/repos/caddyserver/caddy/releases/latest | \
+          jq -r ".tag_name" > git-hashes/caddy-release.txt
+
+      - name: Check for modified files
+        id: git-check
+        run: echo ::set-output name=caddy-out-of-date::$([ -z "`git status --porcelain`" ] && echo "false" || echo "true")
+
+  check-for-plugin-updates:
+    runs-on: ubuntu-latest
+    needs: check-for-new-caddy-release
+    outputs:
+      desec: ${{ steps.caddy-check.outputs.desec-out-of-date || steps.desec.outputs.desec-out-of-date }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: trigger all builds if there is a new caddy release
+        if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'true' }}
+        id: caddy-check
+        run: |
+          echo ::set-output name=desec-out-of-date::true
+
+      - name: Pull desec plugin remote commits
+        if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
+        id: desec
+        run: sh remote-check.sh https://github.com/caddy-dns/desec desec-local.txt git-hashes/desec.txt desec-out-of-date
+
+  build-desec-image:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.desec == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
+    secrets: inherit
+    permissions:
+      packages: write
+    with:
+      image_name: fariszr/caddy-desec
+      dockerfile: Dockerfile-desec
+      image_title: Caddy with desec dns plugin
+      license: MIT
+      tag: latest
+
+  build-desec-alpine-image:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.desec == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
+    secrets: inherit
+    permissions:
+      packages: write
+    with:
+      image_name: fariszr/caddy-desec
+      dockerfile: Dockerfile-desec-alpine
+      image_title: Caddy with desec dns plugin
+      license: MIT
+      tag: alpine
+
+  update-desec-build-commit:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.desec == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/update-commit.yml@main
+    secrets: inherit
+    permissions:
+      contents: write
+    with:
+      hash_file: git-hashes/desec.txt
+      plugin_name: desec
+      repo: https://github.com/caddy-dns/desec
+
+
+  update-caddy-build-version:
+    runs-on: ubuntu-latest
+    needs: check-for-new-caddy-release
+    if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'true' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch release version
+        run: |
+          curl -sL https://api.github.com/repos/caddyserver/caddy/releases/latest | \
+          jq -r ".tag_name" > git-hashes/caddy-release.txt
+
+      - name: Commit latest build version
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git pull
+          git add git-hashes/caddy-release.txt
+          git commit -am "update current caddy build version"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
