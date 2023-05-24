@@ -18,6 +18,9 @@ on:
       tag:
         required: true
         type: string
+      go_plugin_link:
+        required: true
+        type: string
 
 permissions:
   packages: write
@@ -32,6 +35,7 @@ jobs:
       DOCKER_FILE: ${{ inputs.dockerfile }}
       IMAGE_TITLE: ${{ inputs.image_title }}
       TAG: ${{ inputs.tag }}
+      GO_LINK: ${{ inputs.go_plugin_link }}
 
     steps:
       - name: Checkout repository
@@ -96,6 +100,7 @@ jobs:
           file: ${{ env.DOCKER_FILE }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7, linux/arm/v6
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: "GO_LINK=${{ env.GO_LINK }}"
           tags: |
             quay.io/${{ env.IMAGE_NAME }}:${{ env.TAG }}
             ghcr.io/${{ env.IMAGE_NAME }}:${{ env.TAG }}
