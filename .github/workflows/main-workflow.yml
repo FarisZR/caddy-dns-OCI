@@ -54,12 +54,12 @@ jobs:
       - name: Pull desec plugin remote commits
         if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
         id: desec
-        run: sh remote-check.sh https://github.com/caddy-dns/desec desec-local.txt git-hashes/desec.txt desec-out-of-date
+        run: sh commit-check.sh https://github.com/caddy-dns/desec desec-local.txt git-hashes/desec.txt desec-out-of-date
 
       - name: Pull cloudflare plugin remote commits
         if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
         id: cloudflare
-        run: sh remote-check.sh https://github.com/caddy-dns/cloudflare cloudflare-local.txt git-hashes/cloudflare.txt cloudflare-out-of-date
+        run: sh commit-check.sh https://github.com/caddy-dns/cloudflare cloudflare-local.txt git-hashes/cloudflare.txt cloudflare-out-of-date
 
   build-desec-image:
     needs: check-for-plugin-updates
