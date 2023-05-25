@@ -96,6 +96,11 @@ jobs:
         id: cloudflare
         run: sh commit-check.sh https://github.com/caddy-dns/cloudflare cloudflare-local.txt git-hashes/cloudflare.txt cloudflare-out-of-date
 
+      - name: Pull duckdns plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: duckdns
+        run: sh commit-check.sh https://github.com/caddy-dns/duckdns duckdns-local.txt git-hashes/duckdns.txt duckdns-out-of-date
+
   trigger-desec-build:
     needs: check-for-plugin-updates
     if: ${{ needs.check-for-plugin-updates.outputs.desec == 'true' }}
@@ -133,3 +138,22 @@ jobs:
       hash_file: git-hashes/cloudflare.txt
       plugin_name: cloudflare
       repo: https://github.com/caddy-dns/cloudflare
+
+  trigger-duckdns-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.duckdns == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with duckdns dns plugin
+      license: MIT
+      tag: duckdns
+      alpine_tag: duckdns-alpine
+      go_plugin_link: github.com/caddy-dns/duckdns
+      hash_file: git-hashes/duckdns.txt
+      plugin_name: duckdns
+      repo: https://github.com/caddy-dns/duckdns
