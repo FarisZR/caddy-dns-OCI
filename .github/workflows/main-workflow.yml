@@ -77,6 +77,7 @@ jobs:
       cloudflare: ${{ steps.cloudflare.outputs.cloudflare-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       duckdns: ${{ steps.duckdns.outputs.duckdns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       route53: ${{ steps.route53.outputs.route53-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      namecheap: ${{ steps.namecheap.outputs.namecheap-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -106,6 +107,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: route53
         run: sh commit-check.sh https://github.com/caddy-dns/route53 route53-local.txt git-hashes/route53.txt route53-out-of-date
+
+      - name: Pull namecheap plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: namecheap
+        run: sh commit-check.sh https://github.com/caddy-dns/namecheap namecheap-local.txt git-hashes/namecheap.txt namecheap-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -182,3 +188,22 @@ jobs:
       hash_file: git-hashes/route53.txt
       plugin_name: route53
       repo: https://github.com/caddy-dns/route53
+
+  trigger-namecheap-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.namecheap == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with namecheap dns plugin
+      license: MIT
+      tag: namecheap
+      alpine_tag: namecheap-alpine
+      go_plugin_link: github.com/caddy-dns/namecheap
+      hash_file: git-hashes/namecheap.txt
+      plugin_name: namecheap
+      repo: https://github.com/caddy-dns/namecheap
