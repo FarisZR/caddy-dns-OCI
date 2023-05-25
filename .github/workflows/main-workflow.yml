@@ -156,6 +156,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+    secrets: inherit
     with:
       dockerfile: Dockerfile
       dockerfile_alpine: Dockerfile-alpine
@@ -175,6 +176,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+    secrets: inherit
     with:
       dockerfile: Dockerfile
       dockerfile_alpine: Dockerfile-alpine
@@ -194,6 +196,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+    secrets: inherit
     with:
       dockerfile: Dockerfile
       dockerfile_alpine: Dockerfile-alpine
@@ -213,6 +216,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+    secrets: inherit
     with:
       dockerfile: Dockerfile
       dockerfile_alpine: Dockerfile-alpine
@@ -232,6 +236,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+    secrets: inherit
     with:
       dockerfile: Dockerfile
       dockerfile_alpine: Dockerfile-alpine
@@ -251,6 +256,7 @@ jobs:
     permissions:
       packages: write
       contents: write
+    secrets: inherit
     with:
       dockerfile: Dockerfile
       dockerfile_alpine: Dockerfile-alpine
