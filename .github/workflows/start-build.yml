@@ -63,6 +63,7 @@ jobs:
 
   update-plugin-build-commit:
     runs-on: ubuntu-latest
+    needs: build-image
     env:
       HASH_FILE: ${{ inputs.hash_file }}
       PLUGIN_NAME: ${{ inputs.plugin_name }}
