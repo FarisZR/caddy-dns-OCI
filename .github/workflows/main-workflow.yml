@@ -79,6 +79,7 @@ jobs:
       route53: ${{ steps.route53.outputs.route53-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       namecheap: ${{ steps.namecheap.outputs.namecheap-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       digitalocean: ${{ steps.digitalocean.outputs.digitalocean-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      hetzner: ${{ steps.hetzner.outputs.hetzner-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -118,6 +119,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: digitalocean
         run: sh commit-check.sh https://github.com/caddy-dns/digitalocean digitalocean-local.txt git-hashes/digitalocean.txt digitalocean-out-of-date
+
+      - name: Pull hetzner plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: hetzner
+        run: sh commit-check.sh https://github.com/caddy-dns/hetzner hetzner-local.txt git-hashes/hetzner.txt hetzner-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -232,3 +238,22 @@ jobs:
       hash_file: git-hashes/digitalocean.txt
       plugin_name: digitalocean
       repo: https://github.com/caddy-dns/digitalocean
+
+  trigger-hetzner-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.hetzner == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with hetzner dns plugin
+      license: MIT
+      tag: hetzner
+      alpine_tag: hetzner-alpine
+      go_plugin_link: github.com/caddy-dns/hetzner
+      hash_file: git-hashes/hetzner.txt
+      plugin_name: hetzner
+      repo: https://github.com/caddy-dns/hetzner
