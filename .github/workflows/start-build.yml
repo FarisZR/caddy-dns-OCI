@@ -1,0 +1,89 @@
+name: build cloudflare dns image
+
+on:
+  workflow_call:
+    inputs:
+      dockerfile:
+        required: true
+        type: string
+      dockerfile_alpine:
+        required: true
+        type: string
+      image_title:
+        required: true
+        type: string
+      license:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+      alpine_tag:
+        required: true
+        type: string
+      go_plugin_link:
+        required: true
+        type: string
+      hash_file:
+        required: true
+        type: string
+      plugin_name:
+        required: true
+        type: string
+      repo:
+        required: true
+        type: string
+
+jobs:
+  build-image:
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
+    secrets: inherit
+    permissions:
+      packages: write
+    with:
+      image_name: fariszr/caddy-dns
+      dockerfile: ${{ inputs.dockerfile }}
+      image_title: ${{ inputs.image_title }}
+      license: ${{ inputs.license }}
+      tag: ${{ inputs.tag }}
+      go_plugin_link: ${{ inputs.go_plugin_link }}
+
+  build-alpine-image:
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
+    secrets: inherit
+    permissions:
+      packages: write
+    with:
+      image_name: fariszr/caddy-dns
+      dockerfile: ${{ inputs.dockerfile_alpine }}
+      image_title: ${{ inputs.image_title }}
+      license: ${{ inputs.license }}
+      tag: ${{ inputs.alpine_tag }}
+      go_plugin_link: ${{ inputs.go_plugin_link }}
+
+  update-plugin-build-commit:
+    runs-on: ubuntu-latest
+    env:
+      HASH_FILE: ${{ inputs.hash_file }}
+      PLUGIN_NAME: ${{ inputs.plugin_name }}
+      REPO: ${{ inputs.repo }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Update build commit
+      run: git ls-remote ${{ env.REPO }} HEAD > ${{ env.HASH_FILE }}
+
+    - name: Commit
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git pull
+        git add ${{ env.HASH_FILE }}
+        git diff-index --quiet HEAD || git commit -m "update ${{ env.PLUGIN_NAME }} build commit" 
+# avoid step failure when there are no changes https://stackoverflow.com/a/8123841
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
