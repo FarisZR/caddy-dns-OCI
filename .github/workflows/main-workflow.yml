@@ -82,6 +82,7 @@ jobs:
       hetzner: ${{ steps.hetzner.outputs.hetzner-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       acmedns: ${{ steps.acmedns.outputs.acmedns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       alidns: ${{ steps.alidns.outputs.alidns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      dnspod: ${{ steps.dnspod.outputs.dnspod-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -136,6 +137,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: alidns
         run: sh commit-check.sh https://github.com/caddy-dns/alidns alidns-local.txt git-hashes/alidns.txt alidns-out-of-date
+
+      - name: Pull dnspod plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: dnspod
+        run: sh commit-check.sh https://github.com/caddy-dns/dnspod dnspod-local.txt git-hashes/dnspod.txt dnspod-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -307,3 +313,22 @@ jobs:
       hash_file: git-hashes/alidns.txt
       plugin_name: alidns
       repo: https://github.com/caddy-dns/alidns
+
+  trigger-dnspod-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.dnspod == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with dnspod dns plugin
+      license: MIT
+      tag: dnspod
+      alpine_tag: dnspod-alpine
+      go_plugin_link: github.com/caddy-dns/dnspod
+      hash_file: git-hashes/dnspod.txt
+      plugin_name: dnspod
+      repo: https://github.com/caddy-dns/dnspod
