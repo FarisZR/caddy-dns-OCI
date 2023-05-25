@@ -3,6 +3,12 @@ name: check for caddy and plugin updates
 on:
   # Possibility to run it manually
   workflow_dispatch:
+    inputs:
+      trigger_all_builds:
+        description: build all images
+        default: false
+        type: boolean
+        required: true
   push:
     paths:
       - ".github/workflows/main-workflow.yml"
@@ -38,26 +44,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-for-new-caddy-release
     outputs:
-      desec: ${{ steps.desec.outputs.desec-out-of-date || needs.caddy-check.outputs.desec-out-of-date }}
-      cloudflare: ${{ steps.cloudflare.outputs.cloudflare-out-of-date || needs.caddy-check.outputs.cloudflare-out-of-date }}
+      desec: ${{ steps.desec.outputs.desec-out-of-date || steps.caddy-check.outputs.desec-out-of-date }}
+      cloudflare: ${{ steps.cloudflare.outputs.cloudflare-out-of-date || steps.caddy-check.outputs.cloudflare-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: trigger all builds if there is a new caddy release
-        if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'true' }}
+      - name: trigger all builds if there is a new caddy release or if requested
+        if: ${{ github.event.inputs.trigger_all_builds == 'true' || needs.check-for-new-caddy-release.outputs.caddy == 'true' }}
         id: caddy-check
         run: |
           echo "desec-out-of-date=true" >> $GITHUB_OUTPUT
           echo "cloudflare-out-of-date=true" >> $GITHUB_OUTPUT
 
       - name: Pull desec plugin remote commits
-        if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default
         id: desec
         run: sh commit-check.sh https://github.com/caddy-dns/desec desec-local.txt git-hashes/desec.txt desec-out-of-date
 
       - name: Pull cloudflare plugin remote commits
-        if: ${{ needs.check-for-new-caddy-release.outputs.caddy == 'false' }}
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: cloudflare
         run: sh commit-check.sh https://github.com/caddy-dns/cloudflare cloudflare-local.txt git-hashes/cloudflare.txt cloudflare-out-of-date
 
