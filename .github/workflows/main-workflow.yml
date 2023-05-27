@@ -1,4 +1,4 @@
-name: check for caddy and plugin updates
+name: Main workflow
 
 on:
   # Possibility to run it manually
