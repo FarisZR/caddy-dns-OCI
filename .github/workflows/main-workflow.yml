@@ -84,6 +84,7 @@ jobs:
       alidns: ${{ steps.alidns.outputs.alidns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       dnspod: ${{ steps.dnspod.outputs.dnspod-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       google-domains: ${{ steps.google-domains.outputs.google-domains-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      vercel: ${{ steps.vercel.outputs.vercel-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -148,6 +149,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: google-domains
         run: sh commit-check.sh https://github.com/caddy-dns/google-domains google-domains-local.txt git-hashes/google-domains.txt google-domains-out-of-date
+
+      - name: Pull vercel plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: vercel
+        run: sh commit-check.sh https://github.com/caddy-dns/vercel vercel-local.txt git-hashes/vercel.txt vercel-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -368,3 +374,22 @@ jobs:
       hash_file: git-hashes/google-domains.txt
       plugin_name: google-domains
       repo: https://github.com/caddy-dns/google-domains
+
+  trigger-vercel-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.vercel == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with vercel dns plugin
+      license: MIT
+      tag: vercel
+      alpine_tag: vercel-alpine
+      go_plugin_link: github.com/caddy-dns/vercel
+      hash_file: git-hashes/vercel.txt
+      plugin_name: vercel
+      repo: https://github.com/caddy-dns/vercel
