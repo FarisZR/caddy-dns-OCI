@@ -89,6 +89,7 @@ jobs:
           labels: |
             org.opencontainers.image.licenses=${{ env.LICENSE }}
             org.opencontainers.image.title=${{ env.IMAGE_TITLE }}
+            org.opencontainers.image.source=https://github.com/FarisZR/caddy-dns-OCI
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
