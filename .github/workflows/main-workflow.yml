@@ -86,6 +86,7 @@ jobs:
       google-domains: ${{ steps.google-domains.outputs.google-domains-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       vercel: ${{ steps.vercel.outputs.vercel-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       netcup: ${{ steps.netcup.outputs.netcup-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      powerdns: ${{ steps.powerdns.outputs.powerdns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -160,6 +161,12 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: netcup
         run: sh commit-check.sh https://github.com/caddy-dns/netcup netcup-local.txt git-hashes/netcup.txt netcup-out-of-date
+
+      - name: Pull powerdns plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: powerdns
+        run: sh commit-check.sh https://github.com/caddy-dns/powerdns powerdns-local.txt git-hashes/powerdns.txt powerdns-out-of-date
+
   trigger-desec-build:
     needs: check-for-plugin-updates
     if: ${{ needs.check-for-plugin-updates.outputs.desec == 'true' }}
@@ -417,3 +424,22 @@ jobs:
       hash_file: git-hashes/netcup.txt
       plugin_name: netcup
       repo: https://github.com/caddy-dns/netcup
+
+  trigger-powerdns-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.powerdns == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with powerdns dns plugin
+      license: MIT
+      tag: powerdns
+      alpine_tag: powerdns-alpine
+      go_plugin_link: github.com/caddy-dns/powerdns
+      hash_file: git-hashes/powerdns.txt
+      plugin_name: powerdns
+      repo: https://github.com/caddy-dns/powerdns
