@@ -13,9 +13,9 @@ on:
     paths:
       - ".github/workflows/main-workflow.yml"
       - ".github/workflows/build-image.yml"
-      - ".github/workflows/update-commit.yml"
-      - "Dockerfile-desec"
-      - "Dockerfile-desec-alpine"
+      - ".github/workflows/start-build.yml"
+      - "Dockerfile"
+      - "Dockerfile-alpine"
       - "commit-check.sh"
   # Automated
   schedule:
