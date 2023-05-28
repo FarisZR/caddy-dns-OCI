@@ -91,7 +91,8 @@ jobs:
       ovh: ${{ steps.ovh.outputs.ovh-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       netlify: ${{ steps.netlify.outputs.netlify-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       ionos: ${{ steps.ionos.outputs.ionos-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
-      
+      porkbun: ${{ steps.porkbun.outputs.porkbun-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -191,6 +192,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: ionos
         run: sh commit-check.sh https://github.com/caddy-dns/ionos ionos-local.txt git-hashes/ionos.txt ionos-out-of-date
+
+      - name: Pull porkbun plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: porkbun
+        run: sh commit-check.sh https://github.com/caddy-dns/porkbun porkbun-local.txt git-hashes/porkbun.txt porkbun-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -551,3 +557,23 @@ jobs:
       hash_file: git-hashes/ionos.txt
       plugin_name: ionos
       repo: https://github.com/caddy-dns/ionos
+
+  trigger-porkbun-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.porkbun == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with porkbun dns plugin
+      license: MIT
+      tag: porkbun
+      alpine_tag: porkbun-alpine
+      go_plugin_link: github.com/caddy-dns/porkbun
+      hash_file: git-hashes/porkbun.txt
+      plugin_name: porkbun
+      repo: https://github.com/caddy-dns/porkbun
