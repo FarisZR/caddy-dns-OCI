@@ -93,6 +93,7 @@ jobs:
       ionos: ${{ steps.ionos.outputs.ionos-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       porkbun: ${{ steps.porkbun.outputs.porkbun-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       gandi: ${{ steps.gandi.outputs.gandi-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      dynv6: ${{ steps.dynv6.outputs.dynv6-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -203,6 +204,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: gandi
         run: sh commit-check.sh https://github.com/caddy-dns/gandi gandi-local.txt git-hashes/gandi.txt gandi-out-of-date
+
+      - name: Pull dynv6 plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: dynv6
+        run: sh commit-check.sh https://github.com/caddy-dns/dynv6 dynv6-local.txt git-hashes/dynv6.txt dynv6-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -603,3 +609,23 @@ jobs:
       hash_file: git-hashes/gandi.txt
       plugin_name: gandi
       repo: https://github.com/caddy-dns/gandi
+
+  trigger-dynv6-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.dynv6 == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with dynv6 dns plugin
+      license: MIT
+      tag: dynv6
+      alpine_tag: dynv6-alpine
+      go_plugin_link: github.com/caddy-dns/dynv6
+      hash_file: git-hashes/dynv6.txt
+      plugin_name: dynv6
+      repo: https://github.com/caddy-dns/dynv6
