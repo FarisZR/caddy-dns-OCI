@@ -87,6 +87,7 @@ jobs:
       vercel: ${{ steps.vercel.outputs.vercel-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       netcup: ${{ steps.netcup.outputs.netcup-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       powerdns: ${{ steps.powerdns.outputs.powerdns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      googleclouddns: ${{ steps.googleclouddns.outputs.googleclouddns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -166,6 +167,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: powerdns
         run: sh commit-check.sh https://github.com/caddy-dns/powerdns powerdns-local.txt git-hashes/powerdns.txt powerdns-out-of-date
+
+      - name: Pull googleclouddns plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: googleclouddns
+        run: sh commit-check.sh https://github.com/caddy-dns/googleclouddns googleclouddns-local.txt git-hashes/googleclouddns.txt googleclouddns-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -446,3 +452,23 @@ jobs:
       hash_file: git-hashes/powerdns.txt
       plugin_name: powerdns
       repo: https://github.com/caddy-dns/powerdns
+
+  trigger-googleclouddns-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.googleclouddns == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with googleclouddns dns plugin
+      license: MIT
+      tag: googleclouddns
+      alpine_tag: googleclouddns-alpine
+      go_plugin_link: github.com/caddy-dns/googleclouddns
+      hash_file: git-hashes/googleclouddns.txt
+      plugin_name: googleclouddns
+      repo: https://github.com/caddy-dns/googleclouddns
