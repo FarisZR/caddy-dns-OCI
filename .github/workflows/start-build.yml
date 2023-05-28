@@ -79,9 +79,9 @@ jobs:
       run: |
         git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git pull
         git add ${{ env.HASH_FILE }}
         git diff-index --quiet HEAD || git commit -m "update ${{ env.PLUGIN_NAME }} build commit" 
+        git pull
 # avoid step failure when there are no changes https://stackoverflow.com/a/8123841
     - name: Push changes
       uses: ad-m/github-push-action@master
