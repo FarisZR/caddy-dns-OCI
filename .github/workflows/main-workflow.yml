@@ -90,6 +90,8 @@ jobs:
       googleclouddns: ${{ steps.googleclouddns.outputs.googleclouddns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       ovh: ${{ steps.ovh.outputs.ovh-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       netlify: ${{ steps.netlify.outputs.netlify-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      ionos: ${{ steps.ionos.outputs.ionos-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -184,7 +186,12 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: netlify
         run: sh commit-check.sh https://github.com/caddy-dns/netlify netlify-local.txt git-hashes/netlify.txt netlify-out-of-date
-        
+
+      - name: Pull ionos plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: ionos
+        run: sh commit-check.sh https://github.com/caddy-dns/ionos ionos-local.txt git-hashes/ionos.txt ionos-out-of-date
+
   trigger-desec-build:
     needs: check-for-plugin-updates
     if: ${{ needs.check-for-plugin-updates.outputs.desec == 'true' }}
@@ -524,3 +531,23 @@ jobs:
       hash_file: git-hashes/netlify.txt
       plugin_name: netlify
       repo: https://github.com/caddy-dns/netlify
+
+  trigger-ionos-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.ionos == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with ionos dns plugin
+      license: MIT
+      tag: ionos
+      alpine_tag: ionos-alpine
+      go_plugin_link: github.com/caddy-dns/ionos
+      hash_file: git-hashes/ionos.txt
+      plugin_name: ionos
+      repo: https://github.com/caddy-dns/ionos
