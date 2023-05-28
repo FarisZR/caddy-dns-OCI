@@ -88,6 +88,7 @@ jobs:
       netcup: ${{ steps.netcup.outputs.netcup-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       powerdns: ${{ steps.powerdns.outputs.powerdns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       googleclouddns: ${{ steps.googleclouddns.outputs.googleclouddns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      ovh: ${{ steps.ovh.outputs.ovh-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -172,6 +173,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: googleclouddns
         run: sh commit-check.sh https://github.com/caddy-dns/googleclouddns googleclouddns-local.txt git-hashes/googleclouddns.txt googleclouddns-out-of-date
+
+      - name: Pull ovh plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: ovh
+        run: sh commit-check.sh https://github.com/caddy-dns/ovh ovh-local.txt git-hashes/ovh.txt ovh-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -472,3 +478,23 @@ jobs:
       hash_file: git-hashes/googleclouddns.txt
       plugin_name: googleclouddns
       repo: https://github.com/caddy-dns/googleclouddns
+
+  trigger-ovh-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.ovh == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with ovh dns plugin
+      license: MIT
+      tag: ovh
+      alpine_tag: ovh-alpine
+      go_plugin_link: github.com/caddy-dns/ovh
+      hash_file: git-hashes/ovh.txt
+      plugin_name: ovh
+      repo: https://github.com/caddy-dns/ovh
