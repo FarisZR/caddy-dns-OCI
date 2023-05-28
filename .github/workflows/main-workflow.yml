@@ -100,6 +100,7 @@ jobs:
       leaseweb: ${{ steps.leaseweb.outputs.leaseweb-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       linode: ${{ steps.linode.outputs.linode-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       vultr: ${{ steps.vultr.outputs.vultr-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      inwx: ${{ steps.inwx.outputs.inwx-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -245,6 +246,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: vultr
         run: sh commit-check.sh https://github.com/caddy-dns/vultr vultr-local.txt git-hashes/vultr.txt vultr-out-of-date
+
+      - name: Pull inwx plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: inwx
+        run: sh commit-check.sh https://github.com/caddy-dns/inwx inwx-local.txt git-hashes/inwx.txt inwx-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -785,3 +791,23 @@ jobs:
       hash_file: git-hashes/vultr.txt
       plugin_name: vultr
       repo: https://github.com/caddy-dns/vultr
+
+  trigger-inwx-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.inwx == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with inwx dns plugin
+      license: MIT
+      tag: inwx
+      alpine_tag: inwx-alpine
+      go_plugin_link: github.com/caddy-dns/inwx
+      hash_file: git-hashes/inwx.txt
+      plugin_name: inwx
+      repo: https://github.com/caddy-dns/inwx
