@@ -99,6 +99,7 @@ jobs:
       rfc2136: ${{ steps.rfc2136.outputs.rfc2136-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       leaseweb: ${{ steps.leaseweb.outputs.leaseweb-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       linode: ${{ steps.linode.outputs.linode-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      vultr: ${{ steps.vultr.outputs.vultr-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -239,6 +240,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: linode
         run: sh commit-check.sh https://github.com/caddy-dns/linode linode-local.txt git-hashes/linode.txt linode-out-of-date
+
+      - name: Pull vultr plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: vultr
+        run: sh commit-check.sh https://github.com/caddy-dns/vultr vultr-local.txt git-hashes/vultr.txt vultr-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -759,3 +765,23 @@ jobs:
       hash_file: git-hashes/linode.txt
       plugin_name: linode
       repo: https://github.com/caddy-dns/linode
+
+  trigger-vultr-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.vultr == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with vultr dns plugin
+      license: MIT
+      tag: vultr
+      alpine_tag: vultr-alpine
+      go_plugin_link: github.com/caddy-dns/vultr
+      hash_file: git-hashes/vultr.txt
+      plugin_name: vultr
+      repo: https://github.com/caddy-dns/vultr
