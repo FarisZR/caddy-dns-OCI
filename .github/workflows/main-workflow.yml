@@ -98,6 +98,7 @@ jobs:
       njalla: ${{ steps.njalla.outputs.njalla-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       rfc2136: ${{ steps.rfc2136.outputs.rfc2136-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       leaseweb: ${{ steps.leaseweb.outputs.leaseweb-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      linode: ${{ steps.linode.outputs.linode-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -233,6 +234,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: leaseweb
         run: sh commit-check.sh https://github.com/caddy-dns/leaseweb leaseweb-local.txt git-hashes/leaseweb.txt leaseweb-out-of-date
+
+      - name: Pull linode plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: linode
+        run: sh commit-check.sh https://github.com/caddy-dns/linode linode-local.txt git-hashes/linode.txt linode-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -733,3 +739,23 @@ jobs:
       hash_file: git-hashes/leaseweb.txt
       plugin_name: leaseweb
       repo: https://github.com/caddy-dns/leaseweb
+
+  trigger-linode-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.linode == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with linode dns plugin
+      license: MIT
+      tag: linode
+      alpine_tag: linode-alpine
+      go_plugin_link: github.com/caddy-dns/linode
+      hash_file: git-hashes/linode.txt
+      plugin_name: linode
+      repo: https://github.com/caddy-dns/linode
