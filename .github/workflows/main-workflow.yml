@@ -95,6 +95,7 @@ jobs:
       gandi: ${{ steps.gandi.outputs.gandi-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       dynv6: ${{ steps.dynv6.outputs.dynv6-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       openstack-designate: ${{ steps.openstack-designate.outputs.openstack-designate-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      njalla: ${{ steps.njalla.outputs.njalla-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -215,6 +216,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: openstack-designate
         run: sh commit-check.sh https://github.com/caddy-dns/openstack-designate openstack-designate-local.txt git-hashes/openstack-designate.txt openstack-designate-out-of-date
+
+      - name: Pull njalla plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: njalla
+        run: sh commit-check.sh https://github.com/caddy-dns/njalla njalla-local.txt git-hashes/njalla.txt njalla-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -655,3 +661,23 @@ jobs:
       hash_file: git-hashes/openstack-designate.txt
       plugin_name: openstack-designate
       repo: https://github.com/caddy-dns/openstack-designate
+
+  trigger-njalla-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.njalla == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with njalla dns plugin
+      license: MIT
+      tag: njalla
+      alpine_tag: njalla-alpine
+      go_plugin_link: github.com/caddy-dns/njalla
+      hash_file: git-hashes/njalla.txt
+      plugin_name: njalla
+      repo: https://github.com/caddy-dns/njalla
