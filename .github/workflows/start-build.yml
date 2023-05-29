@@ -34,6 +34,8 @@ on:
         required: true
         type: string
 
+concurrency: main_workflow
+
 jobs:
   build-image:
     uses: FarisZR/caddy-dns-OCI/.github/workflows/build-image.yml@main
