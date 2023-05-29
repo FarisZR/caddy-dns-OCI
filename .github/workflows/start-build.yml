@@ -66,7 +66,6 @@ jobs:
     needs: build-image
     env:
       HASH_FILE: ${{ inputs.hash_file }}
-      PLUGIN_NAME: ${{ inputs.plugin_name }}
       REPO: ${{ inputs.repo }}
     steps:
     - name: Checkout repository
@@ -75,16 +74,8 @@ jobs:
     - name: Update build commit
       run: git ls-remote ${{ env.REPO }} HEAD > ${{ env.HASH_FILE }}
 
-    - name: Commit
-      run: |
-        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add ${{ env.HASH_FILE }}
-        git diff-index --quiet HEAD || git commit -m "update ${{ env.PLUGIN_NAME }} build commit" 
-        git pull
-# avoid step failure when there are no changes https://stackoverflow.com/a/8123841
-    - name: Push changes
-      uses: ad-m/github-push-action@master
+    - name: commit and push hash update
+      uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
+        file_pattern: git-hashes/${{ inputs.hash_file }}
+        commit_message: update ${{ inputs.plugin_name }} build commit
