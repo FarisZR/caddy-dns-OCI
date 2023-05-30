@@ -112,6 +112,7 @@ jobs:
       civo: ${{ steps.civo.outputs.civo-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       infomaniak: ${{ steps.infomaniak.outputs.infomaniak-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       hosttech: ${{ steps.hosttech.outputs.hosttech-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      totaluptime: ${{ steps.totaluptime.outputs.totaluptime-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -317,6 +318,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: hosttech
         run: sh commit-check.sh https://github.com/caddy-dns/hosttech hosttech-local.txt git-hashes/hosttech.txt hosttech-out-of-date
+
+      - name: Pull totaluptime plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: totaluptime
+        run: sh commit-check.sh https://github.com/caddy-dns/totaluptime totaluptime-local.txt git-hashes/totaluptime.txt totaluptime-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -1097,3 +1103,23 @@ jobs:
       hash_file: git-hashes/hosttech.txt
       plugin_name: hosttech
       repo: https://github.com/caddy-dns/hosttech
+
+  trigger-totaluptime-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.totaluptime == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with totaluptime dns plugin
+      license: MIT
+      tag: totaluptime
+      alpine_tag: totaluptime-alpine
+      go_plugin_link: github.com/caddy-dns/totaluptime
+      hash_file: git-hashes/totaluptime.txt
+      plugin_name: totaluptime
+      repo: https://github.com/caddy-dns/totaluptime
