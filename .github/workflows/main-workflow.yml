@@ -116,6 +116,7 @@ jobs:
       scaleway: ${{ steps.scaleway.outputs.scaleway-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       ddnss: ${{ steps.ddnss.outputs.ddnss-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       dinahosting: ${{ steps.dinahosting.outputs.dinahosting-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      metaname: ${{ steps.metaname.outputs.metaname-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -341,6 +342,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: dinahosting
         run: sh commit-check.sh https://github.com/caddy-dns/dinahosting dinahosting-local.txt git-hashes/dinahosting.txt dinahosting-out-of-date
+
+      - name: Pull metaname plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: metaname
+        run: sh commit-check.sh https://github.com/caddy-dns/metaname metaname-local.txt git-hashes/metaname.txt metaname-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -1201,3 +1207,23 @@ jobs:
       hash_file: git-hashes/dinahosting.txt
       plugin_name: dinahosting
       repo: https://github.com/caddy-dns/dinahosting
+
+  trigger-metaname-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.metaname == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with metaname dns plugin
+      license: MIT
+      tag: metaname
+      alpine_tag: metaname-alpine
+      go_plugin_link: github.com/caddy-dns/metaname
+      hash_file: git-hashes/metaname.txt
+      plugin_name: metaname
+      repo: https://github.com/caddy-dns/metaname
