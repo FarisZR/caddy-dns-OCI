@@ -103,6 +103,7 @@ jobs:
       inwx: ${{ steps.inwx.outputs.inwx-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       mythicbeasts: ${{ steps.mythicbeasts.outputs.mythicbeasts-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       transip: ${{ steps.transip.outputs.transip-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      godaddy: ${{ steps.godaddy.outputs.godaddy-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -263,6 +264,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: transip
         run: sh commit-check.sh https://github.com/caddy-dns/transip transip-local.txt git-hashes/transip.txt transip-out-of-date
+
+      - name: Pull godaddy plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: godaddy
+        run: sh commit-check.sh https://github.com/caddy-dns/godaddy godaddy-local.txt git-hashes/godaddy.txt godaddy-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -863,3 +869,23 @@ jobs:
       hash_file: git-hashes/transip.txt
       plugin_name: transip
       repo: https://github.com/caddy-dns/transip
+
+  trigger-godaddy-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.godaddy == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with godaddy dns plugin
+      license: MIT
+      tag: godaddy
+      alpine_tag: godaddy-alpine
+      go_plugin_link: github.com/caddy-dns/godaddy
+      hash_file: git-hashes/godaddy.txt
+      plugin_name: godaddy
+      repo: https://github.com/caddy-dns/godaddy
