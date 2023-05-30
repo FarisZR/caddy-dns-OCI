@@ -113,6 +113,7 @@ jobs:
       infomaniak: ${{ steps.infomaniak.outputs.infomaniak-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       hosttech: ${{ steps.hosttech.outputs.hosttech-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       totaluptime: ${{ steps.totaluptime.outputs.totaluptime-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      scaleway: ${{ steps.scaleway.outputs.scaleway-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -323,6 +324,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: totaluptime
         run: sh commit-check.sh https://github.com/caddy-dns/totaluptime totaluptime-local.txt git-hashes/totaluptime.txt totaluptime-out-of-date
+
+      - name: Pull scaleway plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: scaleway
+        run: sh commit-check.sh https://github.com/caddy-dns/scaleway scaleway-local.txt git-hashes/scaleway.txt scaleway-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -1123,3 +1129,23 @@ jobs:
       hash_file: git-hashes/totaluptime.txt
       plugin_name: totaluptime
       repo: https://github.com/caddy-dns/totaluptime
+
+  trigger-scaleway-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.scaleway == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with scaleway dns plugin
+      license: MIT
+      tag: scaleway
+      alpine_tag: scaleway-alpine
+      go_plugin_link: github.com/caddy-dns/scaleway
+      hash_file: git-hashes/scaleway.txt
+      plugin_name: scaleway
+      repo: https://github.com/caddy-dns/scaleway
