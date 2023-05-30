@@ -106,6 +106,7 @@ jobs:
       godaddy: ${{ steps.godaddy.outputs.godaddy-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       ioopia: ${{ steps.ioopia.outputs.ioopia-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       namesilo: ${{ steps.namesilo.outputs.namesilo-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      namedotcom: ${{ steps.namedotcom.outputs.namedotcom-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -281,6 +282,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: namesilo
         run: sh commit-check.sh https://github.com/caddy-dns/namesilo namesilo-local.txt git-hashes/namesilo.txt namesilo-out-of-date
+
+      - name: Pull namedotcom plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: namedotcom
+        run: sh commit-check.sh https://github.com/caddy-dns/namedotcom namedotcom-local.txt git-hashes/namedotcom.txt namedotcom-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -941,3 +947,23 @@ jobs:
       hash_file: git-hashes/namesilo.txt
       plugin_name: namesilo
       repo: https://github.com/caddy-dns/namesilo
+
+  trigger-namedotcom-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.namedotcom == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with namedotcom dns plugin
+      license: MIT
+      tag: namedotcom
+      alpine_tag: namedotcom-alpine
+      go_plugin_link: github.com/caddy-dns/namedotcom
+      hash_file: git-hashes/namedotcom.txt
+      plugin_name: namedotcom
+      repo: https://github.com/caddy-dns/namedotcom
