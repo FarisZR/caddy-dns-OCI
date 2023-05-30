@@ -79,5 +79,5 @@ jobs:
     - name: commit and push hash update
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        file_pattern: git-hashes/${{ inputs.hash_file }}
+        file_pattern: ${{ inputs.hash_file }}
         commit_message: update ${{ inputs.plugin_name }} build commit
