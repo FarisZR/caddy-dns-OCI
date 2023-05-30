@@ -73,6 +73,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: fetch latest commits
+      run: git pull
+
     - name: Update build commit
       run: git ls-remote ${{ env.REPO }} HEAD > ${{ env.HASH_FILE }}
 
