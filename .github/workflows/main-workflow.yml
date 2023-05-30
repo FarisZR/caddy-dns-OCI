@@ -117,6 +117,7 @@ jobs:
       ddnss: ${{ steps.ddnss.outputs.ddnss-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       dinahosting: ${{ steps.dinahosting.outputs.dinahosting-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       metaname: ${{ steps.metaname.outputs.metaname-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      nicrudns: ${{ steps.nicrudns.outputs.nicrudns-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -347,6 +348,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: metaname
         run: sh commit-check.sh https://github.com/caddy-dns/metaname metaname-local.txt git-hashes/metaname.txt metaname-out-of-date
+
+      - name: Pull nicrudns plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: nicrudns
+        run: sh commit-check.sh https://github.com/caddy-dns/nicrudns nicrudns-local.txt git-hashes/nicrudns.txt nicrudns-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -1227,3 +1233,23 @@ jobs:
       hash_file: git-hashes/metaname.txt
       plugin_name: metaname
       repo: https://github.com/caddy-dns/metaname
+
+  trigger-nicrudns-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.nicrudns == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with nicrudns dns plugin
+      license: MIT
+      tag: nicrudns
+      alpine_tag: nicrudns-alpine
+      go_plugin_link: github.com/caddy-dns/nicrudns
+      hash_file: git-hashes/nicrudns.txt
+      plugin_name: nicrudns
+      repo: https://github.com/caddy-dns/nicrudns
