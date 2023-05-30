@@ -108,6 +108,7 @@ jobs:
       namesilo: ${{ steps.namesilo.outputs.namesilo-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       namedotcom: ${{ steps.namedotcom.outputs.namedotcom-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       directadmin: ${{ steps.directadmin.outputs.directadmin-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      tencentcloud: ${{ steps.tencentcloud.outputs.tencentcloud-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -293,6 +294,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: directadmin
         run: sh commit-check.sh https://github.com/caddy-dns/directadmin directadmin-local.txt git-hashes/directadmin.txt directadmin-out-of-date
+
+      - name: Pull tencentcloud plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: tencentcloud
+        run: sh commit-check.sh https://github.com/caddy-dns/tencentcloud tencentcloud-local.txt git-hashes/tencentcloud.txt tencentcloud-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -993,3 +999,23 @@ jobs:
       hash_file: git-hashes/directadmin.txt
       plugin_name: directadmin
       repo: https://github.com/caddy-dns/directadmin
+
+  trigger-tencentcloud-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.tencentcloud == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with tencentcloud dns plugin
+      license: MIT
+      tag: tencentcloud
+      alpine_tag: tencentcloud-alpine
+      go_plugin_link: github.com/caddy-dns/tencentcloud
+      hash_file: git-hashes/tencentcloud.txt
+      plugin_name: tencentcloud
+      repo: https://github.com/caddy-dns/tencentcloud
