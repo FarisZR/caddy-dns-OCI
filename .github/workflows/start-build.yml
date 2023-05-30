@@ -34,7 +34,7 @@ on:
         required: true
         type: string
 
-concurrency: main_workflow
+concurrency: ${{ inputs.plugin_name }}
 
 jobs:
   build-image:
