@@ -107,6 +107,7 @@ jobs:
       ioopia: ${{ steps.ioopia.outputs.ioopia-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       namesilo: ${{ steps.namesilo.outputs.namesilo-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       namedotcom: ${{ steps.namedotcom.outputs.namedotcom-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      directadmin: ${{ steps.directadmin.outputs.directadmin-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
 
     steps:
       - name: Checkout repository
@@ -287,6 +288,11 @@ jobs:
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
         id: namedotcom
         run: sh commit-check.sh https://github.com/caddy-dns/namedotcom namedotcom-local.txt git-hashes/namedotcom.txt namedotcom-out-of-date
+
+      - name: Pull directadmin plugin remote commits
+        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+        id: directadmin
+        run: sh commit-check.sh https://github.com/caddy-dns/directadmin directadmin-local.txt git-hashes/directadmin.txt directadmin-out-of-date
 
   trigger-desec-build:
     needs: check-for-plugin-updates
@@ -967,3 +973,23 @@ jobs:
       hash_file: git-hashes/namedotcom.txt
       plugin_name: namedotcom
       repo: https://github.com/caddy-dns/namedotcom
+
+  trigger-directadmin-build:
+    needs: check-for-plugin-updates
+    if: ${{ needs.check-for-plugin-updates.outputs.directadmin == 'true' }}
+    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+    permissions:
+      packages: write
+      contents: write
+    secrets: inherit
+    with:
+      dockerfile: Dockerfile
+      dockerfile_alpine: Dockerfile-alpine
+      image_title: Caddy with directadmin dns plugin
+      license: MIT
+      tag: directadmin
+      alpine_tag: directadmin-alpine
+      go_plugin_link: github.com/caddy-dns/directadmin
+      hash_file: git-hashes/directadmin.txt
+      plugin_name: directadmin
+      repo: https://github.com/caddy-dns/directadmin
