@@ -3,7 +3,7 @@ I created this project to avoid having to manually update my custom caddy images
 It checks for updates every hour and rebuilds the images accordingly.
 
 ## Which plugins are supported?
-Pretty much all plugins except lego-deprecated and plugins affected by https://github.com/FarisZR/caddy-dns-OCI/issues/1
+Pretty much all plugins except lego-deprecated, [RFC2136](https://github.com/FarisZR/caddy-dns-OCI/issues/2), and plugins affected by https://github.com/FarisZR/caddy-dns-OCI/issues/1
 
 **If you notice a plugin that is not listed in this project, open a [PR](#contributing)!**.
 
