@@ -1,6 +1,6 @@
 # caddy-dns-OCI
 I created this project to avoid having to manually update my custom caddy images.
-It checks for updates every hour and rebuilds the images accordingly.
+It checks for updates 4 times a day (every 6 hours) and rebuilds the images accordingly.
 
 ## Which plugins are supported?
 Pretty much all plugins except lego-deprecated and plugins affected by https://github.com/FarisZR/caddy-dns-OCI/issues/1 or https://github.com/FarisZR/caddy-dns-OCI/issues/2
@@ -61,6 +61,8 @@ This way we can just edit the file once and it will apply to all plugins, in add
 The [start-build.yml](.github/workflows/start-build.yml) requires the following inputs: `dockerfile`, `dockerfile_alpine`, `image_title`, `license`, `tag`, `alpine_tag`, `go_plugin_link`, `hash_file`, `plugin_name`, `repo`.
 then it calls [build-image.yml](.github/workflows/build-image.yml) using those inputs twice, once for the normal image and once for alpine.
 and if the default build succeeds, it triggers the final job, `update-plugin-build-commit', which does what it says and updates the build hash for that plugin in [git-hashes](/git-hashes/).
+
+Each start-build.yml run uses the plugins name as a concurrency group, to stop multiple builds for the same plugin from running at the same time, without stopping builds from different checks for different plugins from continuing.
 
 ## Contribute 
 Thanks for your interest! as long as the project doesn't hit github's 256 job limit, it should be fine.
