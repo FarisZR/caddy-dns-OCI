@@ -19,8 +19,8 @@ on:
       - "commit-check.sh"
   # Automated
   schedule:
-    # Run Every 6 hours
-    - cron: "0 */6 * * *"
+    # Run Every monday at 12 pm
+    - cron: "0 12 * * 1"
 
 jobs:
   check-for-new-caddy-release:
