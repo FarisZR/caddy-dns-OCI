@@ -92,7 +92,7 @@ jobs:
       netlify: ${{ steps.netlify.outputs.netlify-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       ionos: ${{ steps.ionos.outputs.ionos-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       porkbun: ${{ steps.porkbun.outputs.porkbun-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
-      gandi: ${{ steps.gandi.outputs.gandi-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
+      # gandi: ${{ steps.gandi.outputs.gandi-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       dynv6: ${{ steps.dynv6.outputs.dynv6-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       openstack-designate: ${{ steps.openstack-designate.outputs.openstack-designate-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
       njalla: ${{ steps.njalla.outputs.njalla-out-of-date || steps.caddy-check.outputs.plugins-out-of-date }}
@@ -224,10 +224,10 @@ jobs:
         id: porkbun
         run: sh commit-check.sh https://github.com/caddy-dns/porkbun porkbun-local.txt git-hashes/porkbun.txt porkbun-out-of-date
 
-      - name: Pull gandi plugin remote commits
-        if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
-        id: gandi
-        run: sh commit-check.sh https://github.com/caddy-dns/gandi gandi-local.txt git-hashes/gandi.txt gandi-out-of-date
+      # - name: Pull gandi plugin remote commits
+      #   if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
+      #   id: gandi
+      #   run: sh commit-check.sh https://github.com/caddy-dns/gandi gandi-local.txt git-hashes/gandi.txt gandi-out-of-date
 
       - name: Pull dynv6 plugin remote commits
         if: ${{ github.event.inputs.trigger_all_builds == 'false' || github.event.inputs.trigger_all_builds == '' && needs.check-for-new-caddy-release.outputs.caddy == 'false' }} #workaround, github inputs will be empty by default        
@@ -734,25 +734,25 @@ jobs:
       plugin_name: porkbun
       repo: https://github.com/caddy-dns/porkbun
 
-  trigger-gandi-build:
-    needs: check-for-plugin-updates
-    if: ${{ needs.check-for-plugin-updates.outputs.gandi == 'true' }}
-    uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
-    permissions:
-      packages: write
-      contents: write
-    secrets: inherit
-    with:
-      dockerfile: Dockerfile
-      dockerfile_alpine: Dockerfile-alpine
-      image_title: Caddy with gandi dns plugin
-      license: MIT
-      tag: gandi
-      alpine_tag: gandi-alpine
-      go_plugin_link: github.com/caddy-dns/gandi
-      hash_file: git-hashes/gandi.txt
-      plugin_name: gandi
-      repo: https://github.com/caddy-dns/gandi
+  # trigger-gandi-build:
+  #   needs: check-for-plugin-updates
+  #   if: ${{ needs.check-for-plugin-updates.outputs.gandi == 'true' }}
+  #   uses: FarisZR/caddy-dns-OCI/.github/workflows/start-build.yml@main
+  #   permissions:
+  #     packages: write
+  #     contents: write
+  #   secrets: inherit
+  #   with:
+  #     dockerfile: Dockerfile
+  #     dockerfile_alpine: Dockerfile-alpine
+  #     image_title: Caddy with gandi dns plugin
+  #     license: MIT
+  #     tag: gandi
+  #     alpine_tag: gandi-alpine
+  #     go_plugin_link: github.com/caddy-dns/gandi
+  #     hash_file: git-hashes/gandi.txt
+  #     plugin_name: gandi
+  #     repo: https://github.com/caddy-dns/gandi
 
   trigger-dynv6-build:
     needs: check-for-plugin-updates
