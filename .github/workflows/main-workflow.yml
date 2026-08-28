@@ -549,8 +549,7 @@ jobs:
       license: MIT
       tag: dnspod
       alpine_tag: dnspod-alpine
-      # pinned to branch: latest tag (v0.0.4) predates libdns v1 migration
-      go_plugin_link: github.com/caddy-dns/dnspod@master
+      go_plugin_link: github.com/caddy-dns/dnspod
       hash_file: git-hashes/dnspod.txt
       plugin_name: dnspod
       repo: https://github.com/caddy-dns/dnspod
@@ -590,8 +589,7 @@ jobs:
       license: MIT
       tag: vercel
       alpine_tag: vercel-alpine
-      # pinned to branch: latest tag (v0.0.2) predates libdns v1 migration
-      go_plugin_link: github.com/caddy-dns/vercel@main
+      go_plugin_link: github.com/caddy-dns/vercel
       hash_file: git-hashes/vercel.txt
       plugin_name: vercel
       repo: https://github.com/caddy-dns/vercel
